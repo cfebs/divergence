@@ -1,32 +1,44 @@
 
 site_readme_path = 'README.md';
+markdown_extenstions = ['.md', '.markdown'];
 
 /**
  * Object to scope markdown retrieval under
  */
 function _Retriever()
 {
-  this.get = function(url, target) {
-    $.ajax({
-      url: url,
-      success: function(data) {
-        target.html(markdown.toHTML(data));
+  this.get = function(url, target, callback) {
+    var done = false;
+
+    $.each(markdown_extenstions, function(i, e) {
+      if (!done) {
+        $.ajax({
+          url: url+e,
+          success: function(data) {
+            finalData = data;
+            done = true;
+            var md = markdown.toHTML(finalData);
+
+            if (target) target.html(md);
+            if (callback) callback(md);
+          }
+        });
       }
     });
+
   }
 }; var Retriever = new _Retriever();
 
 
 function Scanner()
 {
-  this.url = window.location.pathname + 'test/';
+  this.dir = 'test/';
+  this.url = window.location.pathname + this.dir;
   this.manifest_name = 'manifest.yml';
-
-  this.url += this.manifest_name;
 
   this.getManifest = function() {
     $.ajax({
-      url: this.url,
+      url: this.url + this.manifest_name,
       success: function(data) {
         var arr = jsyaml.load(data);
         this.parseManifest(arr, '');
@@ -57,8 +69,18 @@ function Scanner()
         return 1; // continue
       }
       // do work on array item
-      alert(dir + e);
+      this.mdParse(dir, e);
     }.bind(this));
+  }
+
+  this.mdParse =  function(dir, e) {
+    // TODO left off
+
+    Retriever.get(this.url+dir+e, null, function(md) {
+      alert(md);
+    });
+
+
   }
 };
 
@@ -155,7 +177,9 @@ function _Config() {
 // On load
 $(function(){
 
-  Retriever.get(site_readme_path, $('#readme'));
+  Retriever.get('README', $('#readme'), function(md) {
+    alert(md);
+  });
 
   $('form').submit(false);
   $('textarea').tabby({tabString:'    '});
