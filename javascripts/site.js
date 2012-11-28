@@ -45,7 +45,8 @@ new Editor($("#text-input").get(0), $("#preview").get(0));
  */
 function _Config() {
   this.map = {
-    'markdown_extensions' : 'README.md, README.markdown, readme.md, readme.markdown'
+    'readme_filenames' : 'README.md, README.markdown, readme.md, readme.markdown',
+    'manifest'  : ''
   }
 
   this.container = $('body'); // TODO maybe no container?
@@ -58,7 +59,7 @@ function _Config() {
   this.init = function() {
 
     $.each(this.map, function(key, def) {
-      var input = this.container.find('input[name="'+key+'"]');
+      var input = this.container.find('[name="'+key+'"]');
       var cookie = $.cookie(key);
 
       if (cookie && cookie.length > 0) {
@@ -86,7 +87,7 @@ function _Config() {
   this.save = function() {
     $.each(this.map, function(key, def) {
 
-      var input = this.container.find('input[name="'+key+'"]');
+      var input = this.container.find('[name="'+key+'"]');
       $.cookie(key, input.attr('value'), {expires:365})
 
     }.bind(this));
@@ -102,6 +103,7 @@ function _Config() {
       $.removeCookie(key);
       var input = this.container.find('input[name="'+key+'"]');
       input.attr('value', def);
+
     }.bind(this));
   }
 
@@ -114,5 +116,14 @@ $(function(){
   Retriever.get(site_readme_path, $('#readme'));
 
   $('form').submit(false);
+  $('textarea').tabby({tabString:'    '});
+
+  var x = $('#manifest').attr('value');
+  try {
+    x = jsyaml.load(x);
+  } catch (e) {
+    alert(e);
+  }
+
 });
 
