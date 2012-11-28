@@ -17,9 +17,51 @@ function _Retriever()
 }; var Retriever = new _Retriever();
 
 
-function _Scanner()
+function Scanner()
 {
-}; var Scanner = new _Scanner();
+  this.url = window.location.pathname + 'test/';
+  this.manifest_name = 'manifest.yml';
+
+  this.url += this.manifest_name;
+
+  this.getManifest = function() {
+    $.ajax({
+      url: this.url,
+      success: function(data) {
+        var arr = jsyaml.load(data);
+        this.parseManifest(arr, '');
+      }.bind(this),
+      statusCode: {
+        404: function() {
+          alert('Manifest Not Found');
+        }
+      },
+      error: function(data) {
+      }
+    });
+  }
+
+  /**
+   * Recursively parse through our yaml manifest
+   */
+  this.parseManifest = function(arr, dir) {
+
+    $.each(arr, function(i, e) {
+      if (Object.isObject(e)) {
+        $.each(e, function(k, v) {
+          if (Array.isArray(v)) {
+            this.parseManifest(v, k+'/')
+          }
+        }.bind(this));
+
+        return 1; // continue
+      }
+      // do work on array item
+      alert(dir + e);
+    }.bind(this));
+  }
+};
+
 
 
 
@@ -119,11 +161,13 @@ $(function(){
   $('textarea').tabby({tabString:'    '});
 
   var x = $('#manifest').attr('value');
-  try {
-    x = jsyaml.load(x);
-  } catch (e) {
-    alert(e);
-  }
+  //try {
+  //  x = jsyaml.load(x);
+  //} catch (e) {
+  //  alert(e);
+  //}
 
+  var scan = new Scanner();
+  scan.getManifest();
 });
 
