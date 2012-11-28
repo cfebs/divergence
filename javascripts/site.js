@@ -1,5 +1,5 @@
 
-readme_path = 'README.md';
+site_readme_path = 'README.md';
 
 /**
  * Object to scope markdown retrieval under
@@ -14,10 +14,14 @@ function _Retriever()
       }
     });
   }
-}
+}; var Retriever = new _Retriever();
 
-var Retriever = new _Retriever();
-Retriever.get(readme_path, $('#readme'));
+
+function _Scanner()
+{
+}; var Scanner = new _Scanner();
+
+
 
 /**
  * Dynamic markdown editor
@@ -33,13 +37,82 @@ function Editor(input, preview)
 // only works with raw DOM element (.get(0))
 new Editor($("#text-input").get(0), $("#preview").get(0));
 
+
+
+
 /**
- *
+ * Local config
  */
 function _Config() {
-  this.init = function() {
+  this.map = {
+    'markdown_extensions' : 'README.md, README.markdown, readme.md, readme.markdown'
   }
-}
 
-var Config = new _Config();
-Config.init();
+  this.container = $('body'); // TODO maybe no container?
+  this.save_button = this.container.find('.save');
+  this.reset_button = this.container.find('.reset');
+
+  /**
+   * Populate the form
+   */
+  this.init = function() {
+
+    $.each(this.map, function(key, def) {
+      var input = this.container.find('input[name="'+key+'"]');
+      var cookie = $.cookie(key);
+
+      if (cookie && cookie.length > 0) {
+        input.attr('value', cookie);
+      } else {
+        input.attr('value', def);
+      }
+    }.bind(this));
+
+    this.save_button.click(function() {
+      this.save();
+    }.bind(this));
+
+
+    this.reset_button.click(function() {
+      this.reset_all();
+    }.bind(this));
+
+    return this;
+  }
+
+  /**
+   * Save the form
+   */
+  this.save = function() {
+    $.each(this.map, function(key, def) {
+
+      var input = this.container.find('input[name="'+key+'"]');
+      $.cookie(key, input.attr('value'), {expires:365})
+
+    }.bind(this));
+  }
+
+  /**
+   * Reset the form
+   */
+  this.reset_all = function() {
+    if (!confirm('Reset all config fields')) return;
+
+    $.each(this.map, function(key, def) {
+      $.removeCookie(key);
+      var input = this.container.find('input[name="'+key+'"]');
+      input.attr('value', def);
+    }.bind(this));
+  }
+
+}; var Config = (new _Config()).init();
+
+
+// On load
+$(function(){
+
+  Retriever.get(site_readme_path, $('#readme'));
+
+  $('form').submit(false);
+});
+
