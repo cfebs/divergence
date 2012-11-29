@@ -166,7 +166,9 @@
 
   <!-- Main Grid Section -->
   <div class="row">
-    <h2>Projects</h2>
+    <div class="six columns">
+      <h2>Projects</h2>
+    </div>
     <hr>
     <div class="twelve columns">
       <div class="nine columns" id="files">
@@ -177,19 +179,8 @@
       </div>
     </div>
     <hr>
+    <button id="refresh" class="button right">Refresh Project</button>
   </div>
-
-  <div class="row">
-
-    <h3 id="url_settings">Project Docs URL</h3>
-    <div class="twelve columns">
-
-    </div>
-
-    <br>
-
-  </div>
-
 
   <div class="row">
     <h2 id="util">Utilities</h2>
@@ -203,9 +194,9 @@
         <p>
           Save configuration settings in form of cookies
         </p>
-        <form>
-          <label>Readme Filenames</label>
-          <input name="readme_filenames" type="text" />
+        <form id="config_container">
+          <label>Markdown Extensions</label>
+          <input name="markdown_extensions" type="text" />
 
           <p>
             Specify a base path and project directory.
@@ -225,7 +216,7 @@
           </div>
 
           <h5>Manifest</h5>
-          <input type="checkbox" /> <label style="display: inline-block" class="has-tip" title="When fetching project files use this manifest not the one on the server">
+          <input type="checkbox" id="use_manifest"/> <label style="display: inline-block" class="has-tip" title="When fetching project files use this manifest not the one on the server">
             Use This Manifest
           </label>
           <textarea id="manifest" name="manifest" rows="10"></textarea>
