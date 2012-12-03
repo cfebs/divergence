@@ -1,5 +1,4 @@
-
-site_readme_path = 'README.md';
+serrors = [];
 
 /**
  * Util functions
@@ -10,87 +9,10 @@ var Util = {
    */
   defs: function(target, options, defaults) {
     if (!target) return;
-    var options  = options || {};
-    var defaults = defaults || {};
     $.extend(target, $.extend(defaults, options));
   }
 };
 
-/**
- * Local config
- */
-function _Config() {
-  this.map = {
-    'markdown_extensions' : '.md, .markdown',
-    'manifest'  : '- README',
-    'project_directory'  : '',
-    'base_path'  : ''
-  }
-
-  this.container = $('#config_container'); // TODO maybe no container?
-  this.save_button = this.container.find('.save');
-  this.reset_button = this.container.find('.reset');
-
-  /**
-   * Populate the form
-   */
-  this.init = function() {
-
-    $.each(this.map, function(key, def) {
-      var input = this.container.find('[name="'+key+'"]');
-      var cookie = $.cookie(key);
-
-      if (cookie && cookie.length > 0) {
-        input.attr('value', cookie);
-      } else {
-        input.attr('value', def);
-      }
-    }.bind(this));
-
-    this.save_button.click(function() {
-      this.save();
-    }.bind(this));
-
-
-    this.reset_button.click(function() {
-      this.reset_all();
-    }.bind(this));
-
-    return this;
-  }
-
-  /**
-   * Save the form
-   */
-  this.save = function() {
-    $.each(this.map, function(key, def) {
-
-      var input = this.container.find('[name="'+key+'"]');
-      $.cookie(key, input.attr('value'), {expires:365})
-
-    }.bind(this));
-  }
-
-  /**
-   * Reset the form
-   */
-  this.reset_all = function() {
-    if (!confirm('Reset all config fields')) return;
-
-    $.each(this.map, function(key, def) {
-      $.removeCookie(key);
-      var input = this.container.find('input[name="'+key+'"]');
-      input.attr('value', def);
-
-    }.bind(this));
-  }
-
-  this.getValue = function(name) {
-    var input = this.container.find('input[name="'+name+'"]');
-    return input.attr('value');
-  }
-
-}; var Config = (new _Config()).init();
 
 
 /**
@@ -122,6 +44,7 @@ function Retriever(options, callback)
 
     $.ajax({
       url: this.url+extension,
+      cache: false,
 
       success: function(data) {
         done = true;
@@ -173,8 +96,10 @@ function Scanner(options)
    */
   this.getManifest = function() {
     var url = this.url + this.dir + this.manifest_name;
+
     $.ajax({
       url: url,
+      cache: false,
 
       success: function(data) {
         this.parseYMLString(data);
@@ -182,7 +107,7 @@ function Scanner(options)
 
       statusCode: {
         404: function() {
-          alert('Manifest 404 : '+url);
+          $('#files').html('Manifest 404 : ' + url);
         }
       },
 
@@ -247,6 +172,9 @@ function Scanner(options)
 
   }
 
+  /**
+   * Get the files parsed by the manifest
+   */
   this.getFiles = function() {
     $.each(this.files, function(i, file) {
       this.getFile(i, file);
@@ -254,10 +182,11 @@ function Scanner(options)
   }
 
   /**
-   *
+   * Retrieve a file where i is the file and file is a file object
    */
   this.getFile =  function(i, file) {
 
+    // represents a kicked off ajax request
     this.fileGets.push(0);
     var index = this.fileGets.length - 1;
 
@@ -266,6 +195,7 @@ function Scanner(options)
     new Retriever({'url' : url}, function(html) {
 
       // $('<li/>', {text: item}).appendTo(target);
+      // the get has completed
       this.fileGets[index] = 1;
       this.files[i]['html'] = html;
 
@@ -342,9 +272,6 @@ function Editor(input, preview)
 new Editor($("#text-input").get(0), $("#preview").get(0));
 
 
-
-
-
 // On load
 $(function(){
 
@@ -365,20 +292,31 @@ $(function(){
       : null;
 
     var scan = new Scanner({
-      'url': Config.getValue('base_path'),
-      'dir': Config.getValue('project_directory'),
+      'url': Config.get_value('base_path') || '',
+      'dir': Config.get_value('project_directory') || '',
       'manifest_string': manifest_string,
     });
-
   };
+
+  // build the url to link back to this config
+  var buildUrl = function()  {
+    var base_path = Config.get_value('base_path') || '';
+    var project_directory = Config.get_value('project_directory') || '';
+
+    var container = $('#config_container');
+
+    var url = window.location.origin + '/?'
+      + 'base_path=' + base_path.escapeURL(true) + "&"
+      + 'project_directory=' + project_directory.escapeURL(true);
+
+    $('#linkto').val(url);
+  };
+
+  $('.url_build').keyup(buildUrl);
+  buildUrl();
 
   $('#refresh').click(refreshProject);
   refreshProject();
 
-  //try {
-  //  x = jsyaml.load(x);
-  //} catch (e) {
-  //  alert(e);
-  //}
 });
 
