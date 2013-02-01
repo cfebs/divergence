@@ -2,3 +2,5 @@
 - test
 - subdir:
   - pages
+- anotherdir:
+  - boo

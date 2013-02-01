@@ -1,5 +1,3 @@
-serrors = [];
-
 /**
  * Util functions
  */
@@ -79,6 +77,9 @@ function Retriever(options, callback)
  * Scans a url/dir
  *
  * 1. Attempt to retrieve manifest
+ * 2. Parse yml if successful into a nested object structure
+ * 3. Recurse through these while building a 1 level file list
+ * 4. Render the file list as a TOC
  */
 function Scanner(options)
 {
@@ -148,10 +149,11 @@ function Scanner(options)
   /**
    * Recursively parse through our yaml manifest
    *
-   * arr - An array of strings and objects representing the file/directory structure
+   * arr   - An array of strings and objects representing the file/directory structure
    *       of the manifest
    *
-   * dir - the directory to recurse into, this is built up as the recursion continues
+   * dir   - the directory to recurse into, this is built up as the recursion continues
+   * depth - directory depth
    */
   this.parseManifest = function(arr, dir, depth) {
 
@@ -161,6 +163,7 @@ function Scanner(options)
 
         $.each(item, function(k, v) {
 
+          // list of files/dirs
           if (Array.isArray(v)) {
 
             var newDir = dir+k+'/';
@@ -178,9 +181,6 @@ function Scanner(options)
         'name' : item,
         'depth' : depth,
       });
-
-      // get the file and do something
-      //this.getFile(dir, item);
 
     }.bind(this));
 
@@ -200,7 +200,7 @@ function Scanner(options)
    */
   this.getFile = function(i, file) {
 
-    // represents a kicked off ajax request
+    // push a 0 onto fileGets, represents a kicked off ajax request
     this.fileGets.push(0);
     var index = this.fileGets.length - 1;
 
@@ -209,7 +209,7 @@ function Scanner(options)
     new Retriever({'url' : url}, function(html) {
 
       // $('<li/>', {text: item}).appendTo(target);
-      // the get has completed
+      // the get has completed set it to 1
       this.fileGets[index] = 1;
       this.files[i]['html'] = html;
 
@@ -240,9 +240,7 @@ function Scanner(options)
 
       var path = file.dir+file.name;
 
-      var margin = file.depth * 10;
       var li = $('<li/>');
-      li.css('margin-left', margin);
 
       var toc_link = $('<a/>', {
         href: '#',
