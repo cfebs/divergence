@@ -5,14 +5,27 @@ serrors = [];
  */
 var Util = {
   /**
-   * Combine a hash of defaults -> options -> target
+   * Combine a hash of options -> defaults -> target
+   *
+   * Example:
+   *
+   *   var obj = {}
+   *
+   *   Util.defs(obj, {name: 'name'}, {name: 'new name'}
+   *
+   *   obj == {name: 'new name'}
    */
-  defs: function(target, options, defaults) {
+  defs: function(target, defaults, options) {
     if (!target) return;
     $.extend(target, $.extend(defaults, options));
-  }
-};
+  },
 
+  base_url: function(url) {
+    var url = new String(url);
+    var last_slash = url.lastIndexOf('/');
+    return url.to(last_slash);
+  },
+};
 
 
 /**
@@ -35,7 +48,7 @@ function Retriever(options, callback)
     'url'        : '/',
   }
 
-  Util.defs(this, options, defaults);
+  Util.defs(this, defaults, options);
 
   var done = false;
 
@@ -52,6 +65,7 @@ function Retriever(options, callback)
 
         if (this.target) this.target.html(html);
         if (callback) callback(html);
+
       }.bind(this)
 
     });
@@ -70,12 +84,12 @@ function Scanner(options)
 {
   var defaults = {
     dir : '',
-    url : window.location.pathname,
+    url : '/',
     manifest_string : null,
     manifest_name  : 'manifest.yml'
   };
 
-  Util.defs(this, options, defaults);
+  Util.defs(this, defaults, options);
 
   this.files = [];
   this.fileGets = [];
@@ -184,7 +198,7 @@ function Scanner(options)
   /**
    * Retrieve a file where i is the file and file is a file object
    */
-  this.getFile =  function(i, file) {
+  this.getFile = function(i, file) {
 
     // represents a kicked off ajax request
     this.fileGets.push(0);
@@ -271,16 +285,11 @@ function Editor(input, preview)
 // only works with raw DOM element (.get(0))
 new Editor($("#text-input").get(0), $("#preview").get(0));
 
-
 // On load
 $(function(){
+   var Config = (new _Config()).init();
 
-  new Retriever({
-    url:    '/README',
-    target: $('#readme')
-  });
-
-  $('form').submit(false);
+  //$('form').submit(false);
   $('textarea').tabby({tabString:'    '});
 
   var scan = null;
@@ -293,7 +302,6 @@ $(function(){
 
     var scan = new Scanner({
       'url': Config.get_value('base_path') || '',
-      'dir': Config.get_value('project_directory') || '',
       'manifest_string': manifest_string,
     });
   };
@@ -301,13 +309,13 @@ $(function(){
   // build the url to link back to this config
   var buildUrl = function()  {
     var base_path = Config.get_value('base_path') || '';
-    var project_directory = Config.get_value('project_directory') || '';
 
     var container = $('#config_container');
 
-    var url = window.location.origin + '/?'
-      + 'base_path=' + base_path.escapeURL(true) + "&"
-      + 'project_directory=' + project_directory.escapeURL(true);
+    var url = Util.base_url(window.location.href);
+
+    var url = url + '/index.html?'
+      + 'base_path=' + base_path.escapeURL(true);
 
     $('#linkto').val(url);
   };
@@ -318,5 +326,49 @@ $(function(){
   $('#refresh').click(refreshProject);
   refreshProject();
 
+  new Retriever({
+    url:    Util.base_url(window.location.href)+'/README',
+    target: $('#readme')
+  });
+
+
 });
 
+
+
+
+
+/**
+ * Testing
+ */
+(function() {
+  if (false) return;
+
+  var assertEquals = function(expected, actual) {
+    if (expected != actual) {
+      console.log(expected);
+      console.log(actual);
+      alert("failed\nexpected: " + expected + "\ngot: " + actual)
+    }
+  }
+
+  var url = 'file:///home/febs/web/html/divergence/index.html';
+  var expected = 'file:///home/febs/web/html/divergence';
+  assertEquals(expected, Util.base_url(url));
+
+  var url = 'file:///home/febs/web/html/divergence/';
+  var expected = 'file:///home/febs/web/html/divergence';
+  assertEquals(expected, Util.base_url(url));
+
+  var url = 'file:///home/febs/web/html/divergence/index.html#id';
+  var expected = 'file:///home/febs/web/html/divergence';
+  assertEquals(expected, Util.base_url(url));
+
+  var obj = {};
+  var defaults = {foo: 'bar', biz: 'buzz'};
+  var options = {foo: 'fud'};
+  var expected = {foo: 'fud', biz: 'buzz'};
+
+  Util.defs(obj, defaults, options)
+  assertEquals(true, Object.equal(expected, obj));
+})();

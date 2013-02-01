@@ -1,3 +1,22 @@
+var GET = function(key) {
+  var l = window.location;
+  //alert(l.href);
+  var params = {};
+  var url = l.href;
+
+  var paramString = url.split('?')[1];
+  if (!paramString) return;
+
+  var pairs = paramString.split('&');
+  if (!pairs) return;
+
+  for (var i in pairs){
+    var pair = pairs[i].split('=');
+    params[pair[0]] = pair[1];
+  }
+  return params[key];
+};
+
 /**
  * Local config
  */
@@ -5,7 +24,6 @@ function _Config() {
   this.map = {
     'markdown_extensions' : '.md, .markdown',
     'manifest'  : '- README',
-    'project_directory'  : '',
     'base_path'  : ''
   }
 
@@ -20,19 +38,13 @@ function _Config() {
 
     $.each(this.map, function(key, def) {
       var input = this.container.find('[name="'+key+'"]');
-      var cookie = $.cookie(key);
-
-      if (cookie && cookie.length > 0) {
-        input.attr('value', cookie);
-      } else {
-        input.attr('value', def);
+      var fromUrl = GET(key);
+      if (fromUrl) {
+        fromUrl = (new String(fromUrl)).unescapeURL();
       }
-    }.bind(this));
 
-    this.save_button.click(function() {
-      this.save();
+      input.attr('value', (fromUrl ? fromUrl : def));
     }.bind(this));
-
 
     this.reset_button.click(function() {
       this.reset_all();
@@ -42,25 +54,12 @@ function _Config() {
   }
 
   /**
-   * Save the form
-   */
-  this.save = function() {
-    $.each(this.map, function(key, def) {
-
-      var input = this.container.find('[name="'+key+'"]');
-      $.cookie(key, input.attr('value'), {expires:365})
-
-    }.bind(this));
-  }
-
-  /**
    * Reset the form
    */
   this.reset_all = function() {
     if (!confirm('Reset all config fields')) return;
 
     $.each(this.map, function(key, def) {
-      $.removeCookie(key);
       var input = this.container.find('input[name="'+key+'"]');
       input.attr('value', def);
 
@@ -74,14 +73,7 @@ function _Config() {
   this.get_value = function(name) {
     var input = this.container.find('input[name="'+name+'"]');
     var from_input = input.attr('value');
-    var from_url = this.getURLParameter(name);
 
-    var val = from_url || from_input || null;
-    return val;
+    return from_input || null;
   }
-
-  this.getURLParameter = function(name) {
-    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null;
-  }
-
-}; var Config = (new _Config()).init();
+};

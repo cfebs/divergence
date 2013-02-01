@@ -15,7 +15,6 @@ With this tool, you can setup where the docs are located, and distribute 1 URL t
 
 * Completely javascript based, all you have to do is drop it into a folder and go.
 * Link sharing. Javascript can parse url params which allows for the sharing of projects.
-* Configuration saving in cookies
 
 ### Installation
 
@@ -27,9 +26,9 @@ Further down the main index page there is a section to configure the various pat
 
 For example say we want to point the md-browser at ``http://server.com/public_html/projects/feature1``
 
-``base path``: The base of the url, in the example: ``http://server.com/``
+Just enter this in the ``base path`` section.
 
-``project directoy``: The directory tacked onto the host: ``/public_html/projects/feature1``
+The URL link will automatically
 
 #### Manifest
 
